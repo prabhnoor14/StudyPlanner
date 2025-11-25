@@ -55,8 +55,3 @@ Currently stubbed for local development. Replace stub with real API call after s
 - `prisma:migrate` - Run migrations
 - `prisma:generate` - Regenerate Prisma client
 
-## Deployment
-Deploy on AWS/Azure container or serverless (e.g., Vercel + RDS/Aurora). Set environment variables in platform secrets manager.
-
-## License
-Internal use only (no license header added by default).
