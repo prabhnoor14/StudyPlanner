@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TaskType {
+  EXAM
+  ASSIGNMENT
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  courses      Course[]
+  tasks        Task[]
+  weeklySuggestions WeeklySuggestion[]
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  name        String
+  instructor  String?
+  meetingDays String[]  // e.g. ["Mon","Wed"]
+  createdAt   DateTime  @default(now())
+  tasks       Task[]
+}
+
+model Task {
+  id        String     @id @default(cuid())
+  user      User       @relation(fields: [userId], references: [id])
+  userId    String
+  course    Course?    @relation(fields: [courseId], references: [id])
+  courseId  String?
+  title     String
+  type      TaskType
+  priority  TaskPriority @default(MEDIUM)
+  dueDate   DateTime
+  notes     String?
+  subtasks  String[]   @default([])
+  isCompleted Boolean  @default(false)
+  createdAt DateTime    @default(now())
+  plan      StudyPlan?
+}
+
+model StudyPlan {
+  id          String      @id @default(cuid())
+  task        Task        @relation(fields: [taskId], references: [id])
+  taskId      String      @unique
+  generatedAt DateTime    @default(now())
+  model       String?
+  summaryJson Json?       // raw AI summaries keyed by topic
+  days        StudyDay[]
+}
+
+model StudyDay {
+  id          String         @id @default(cuid())
+  studyPlan   StudyPlan      @relation(fields: [studyPlanId], references: [id])
+  studyPlanId String
+  date        DateTime
+  tasks       StudyDayTask[]
+  @@index([studyPlanId, date])
+}
+
+model StudyDayTask {
+  id         String    @id @default(cuid())
+  studyDay   StudyDay  @relation(fields: [studyDayId], references: [id])
+  studyDayId String
+  description String
+  completed   Boolean   @default(false)
+  allocatedMinutes Int  @default(0)
+}
+
+model WeeklySuggestion {
+  id          String   @id @default(cuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  generatedAt DateTime @default(now())
+  model       String?
+  data        Json
+  @@index([userId, generatedAt])
+}
